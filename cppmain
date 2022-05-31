@@ -1,0 +1,19 @@
+#include <Windows.h>
+#include <iostream>
+#include <thread>
+void main() {
+	const auto base = reinterpret_cast<std::uintptr_t>(GetModuleHandleA(nullptr));
+	auto* ptr = reinterpret_cast<std::uintptr_t*>(base + 0x1039CF5);
+	DWORD old_protect;
+
+	VirtualProtect(ptr, 3, PAGE_EXECUTE_READWRITE, &old_protect);
+	std::memset(ptr, 0x90, 3);
+	VirtualProtect(ptr, 3, old_protect, NULL);
+}
+
+int __stdcall DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
+{
+	if (ul_reason_for_call == DLL_PROCESS_ATTACH) {
+		std::thread(main).detach();
+	}
+	return 1;
